@@ -43,21 +43,14 @@ def avg_max_min_tweet_length(df):
     """
     df = tweet_length(df)
     try:
-        avg_tweet_count = round(df.agg(
-            F.mean(F.col('tweet_length')).alias('avg_tweet_count')
-        ).collect()[0]['avg_tweet_count'], 4)
+        aggregated_data = df.agg(
+            F.round(F.mean(F.col('tweet_length')), 4).alias('avg_tweet_length'),
+            F.max(F.col('tweet_length')).alias('max_tweet_length'),
+            F.min(F.col('tweet_length')).alias('min_tweet_length')
+        )
 
-        min_tweet_count = df.agg(
-            F.min(F.col('tweet_length')).alias('min_tweet_count')
-        ).collect()[0]['min_tweet_count']
-
-        max_tweet_count = df.agg(
-            F.max(F.col('tweet_length')).alias('max_tweet_count')
-        ).collect()[0]['max_tweet_count']
-
-        print(f"\nAverage Tweet length: {avg_tweet_count, 2} \t"
-              f"Minimum Tweet length: {min_tweet_count} \t"
-              f"Maximum Tweet length: {max_tweet_count}")
+        print("\nAverage, Maximum, and Minimum tweet length:")
+        aggregated_data.show(truncate=False)
 
     except Exception as args:
         raise f"Error in function avg_max_min_tweet_length. ERROR: \n{args}"
@@ -128,12 +121,13 @@ def most_favorite_tweet(df):
                                     .alias('most_favorite_count')) \
             .collect()[0]['most_favorite_count']    # Gets most likes
 
+        # Gets the tweets having most likes
         favorite_tweet = df.select(F.col('text')) \
             .filter(
-            F.col('favorite_count') == max_favorite_count) \
-            .collect()[0]['text']    # Gets the tweets having most likes
+            F.col('favorite_count') == max_favorite_count)
 
-        print(f"\nTweet with highest number of favorites: {favorite_tweet}")
+        print(f"\nTweet with highest number of favorites: "
+              f"{favorite_tweet.select('text').show(truncate=False)}")
 
         return None
 
@@ -148,17 +142,19 @@ def most_followed_account(df):
     :return: None
     """
     try:
+        # Gets the maximum follower count
         most_followers_count = df.agg(
             F.max(
                 F.col('followers_count')).alias('most_follower_count')
         ) \
-            .collect()[0]['most_follower_count']    # Gets the maximum follower count
+            .collect()[0]['most_follower_count']
 
+        # Filters the account having maximum follower count.
         account_name = df.filter(
-            F.col('followers_count') == most_followers_count) \
-            .collect()[0]['screen_name']    # Filters the account having maximum follower count.
+            F.col('followers_count') == most_followers_count)
 
-        print(f"\nScreen Name with highest number of followers: {account_name}")
+        print(f"\nScreen Name with highest number of followers: "
+              f"{account_name.select('screen_name').show(truncate=False)}")
 
         return None
     except Exception as args:

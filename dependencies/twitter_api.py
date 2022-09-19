@@ -8,7 +8,7 @@ class TwitterAPI:
     def __init__(self):
         # Reads the configurations from the config file and creates the API.
         config = configparser.ConfigParser()
-        config.read("/config/config.ini")
+        config.read("/Users/suhassangolli/PycharmProjects/twitterAnalysis/config/config.ini")
 
         # Get the configurations from config.ini file
         self.limit = int(config['twitter']['LIMIT'])

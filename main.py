@@ -18,8 +18,8 @@ import sys
 
 from analysis.analysis import EngagementRateAnalysis
 from analysis.sentiment_analysis import SentimentAnalysis
-from dependencies.twitter_api import TwitterAPI
 from dependencies.spark_setup import start_spark
+from dependencies.twitter_api import TwitterAPI
 from tasks.tasks import *
 
 KEYWORD1 = None
@@ -104,25 +104,19 @@ if __name__ == '__main__':
 
     print(f"The shape of dataframe: ({tweets_df.count()}, {len(tweets_df.columns)})")
 
-    # Count the words from tweet.
-    # tweets_df = tweet_lenth(tweets_df)
-
     # Get tweet with most number of favorites
     most_favorite_tweet(tweets_df)
 
     # Get account screen name with most number of followers
     most_followed_account(tweets_df)
 
-    # Get average, minimum, and maximum tweet length in terms of words
+    # Get average, minimum, and maximum tweet length in terms of characters
     avg_max_min_tweet_length(tweets_df)
-
-    # Calculate engagement rate
-    tweets_df = calculate_eng_rate(tweets_df)
-    # Calculate the average engagement rate per day
-    tweets_df = average_engagement_rate_daily(tweets_df)
 
     # Create object of engagement rate analysis
     engagement_analysis = EngagementRateAnalysis(tweets_df, KEYWORD1, KEYWORD2)
+    # Calculate the average engagement rate per day
+    engagement_analysis.average_engagement_rate_daily()
     # Generate engagement rate period plots
     engagement_analysis.create_eng_period_chart()
     # Generate engagement rate period plots. Parameters: (KEYWORD1, KEYWORD2, 'both')

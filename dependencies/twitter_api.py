@@ -27,7 +27,7 @@ class TwitterAPI:
 
     def read_tweets(self, query):
         """Reads the tweets from twitter api.
-        :param query: the query to scrape the tweets
+        :param query: the query to filter the tweets
         :return: Cursor object containing the tweets information
         """
         try:

@@ -4,37 +4,6 @@ from pyspark.sql.window import Window
 from matplotlib import pyplot as plt
 
 
-def average_engagement_rate_daily(df):
-    """Calculates average engagement rate daily.
-
-    average_engagement_rate_daily function creates a new column 'daily_avg_engg_rate'.
-    The function calculates the every day average by using moving window and stores the
-    values in the 'daily_avg_engg_rate' column.
-    :param df: PySpark dataframe
-    :return: PySpark dataframe with 'daily_avg_engg_rate' column
-    """
-    try:
-        windowSpec = Window.partitionBy(
-            F.col('created_day')
-        ).orderBy(
-            F.col('created_at')
-        )    # Creates a window by partitioning the data by day and sorting the data by tweet created date
-
-        df = df.withColumn(
-            'daily_avg_engg_rate',
-            F.avg(
-                F.col('engagement_rate')
-            ).over(windowSpec)
-        )    # Calculates the average engagement rate with respect to window
-
-        print("\nCreated daily_avg_engg_rate column.")
-
-        return df
-
-    except Exception as args:
-        raise f"Error in function average_engagement_rate_daily. ERROR: \n{args}"
-
-
 def avg_max_min_tweet_length(df):
     """Calculates average, minimum, and maximum word count.
 
@@ -54,37 +23,6 @@ def avg_max_min_tweet_length(df):
 
     except Exception as args:
         raise f"Error in function avg_max_min_tweet_length. ERROR: \n{args}"
-
-
-def calculate_eng_rate(df):
-    """Calculate the engagement rate.
-
-    calculate_eng_rate function calculates the engagement count by adding
-    retweet count, favorite count, and hashtag count of a tweet. This function
-    calculates the error rate as ERROR RATE = engagement_count/followers count.
-    :param df: PySpark DataFrame
-    :return: PySpark DataFrame containing engagement_count and engagement_rate columns
-    """
-    try:
-        df = df.withColumn('engagement_count',
-                           F.col('retweet_count')
-                           + F.col('favorite_count')
-                           + F.col('hashtag_count')
-                           )
-        print("Created engagement_count column.")
-        df = df.withColumn('engagement_rate',
-                           F.round(
-                               F.col('engagement_count')
-                               / F.col('followers_count')
-                           )
-                           )
-
-        print("\nCreated engagement_rate column.")
-
-        return df
-
-    except Exception as args:
-        raise f"Error in function calculate_eng_rate. ERROR: \n{args}"
 
 
 def get_schema():

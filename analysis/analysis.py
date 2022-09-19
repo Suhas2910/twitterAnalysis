@@ -1,4 +1,4 @@
-from pyspark.sql import functions as F
+from pyspark.sql import functions as F, Window
 from tasks.tasks import plot_line_chart, plot_bar_chart
 
 
@@ -11,14 +11,77 @@ class EngagementRateAnalysis:
     :param keyword2: second keyword
     :return: None
     """
+
     def __init__(self, df, keyword1, keyword2):
         # Two dataframes are created by filtering the original dataframe with respect to keywords.
         self.df = df
+        # Calculate engagement rate
+        self.calculate_eng_rate()
+
         self.keyword1 = keyword1
         self.keyword2 = keyword2
 
-        self.df1 = self.df.filter(F.col('keyword') == self.keyword1)    # Filter data having keyword1
-        self.df2 = self.df.filter(F.col('keyword') == self.keyword2)    # Filter data having keyword2
+        self.df1 = self.df.filter(F.col('keyword') == self.keyword1)  # Filter data having keyword1
+        self.df2 = self.df.filter(F.col('keyword') == self.keyword2)  # Filter data having keyword2
+
+    def calculate_eng_rate(self):
+        """Calculate the engagement rate.
+
+        calculate_eng_rate function calculates the engagement count by adding
+        retweet count, favorite count, and hashtag count of a tweet. This function
+        calculates the error rate as ERROR RATE = engagement_count/followers count.
+        :param df: PySpark DataFrame
+        :return: PySpark DataFrame containing engagement_count and engagement_rate columns
+        """
+        try:
+            self.df = self.df.withColumn('engagement_count',
+                                         F.col('retweet_count')
+                                         + F.col('favorite_count')
+                                         + F.col('hashtag_count')
+                                         )
+            print("Created engagement_count column.")
+            self.df = self.df.withColumn('engagement_rate',
+                                         F.round(
+                                             F.col('engagement_count')
+                                             / F.col('followers_count')
+                                         )
+                                         )
+
+            print("\nCreated engagement_rate column.")
+
+        except Exception as args:
+            raise f"Error in function calculate_eng_rate. ERROR: \n{args}"
+
+    def average_engagement_rate_daily(self):
+        """Calculates average engagement rate daily.
+
+        average_engagement_rate_daily function creates a new column 'daily_avg_engg_rate'.
+        The function calculates the every day average by using moving window and stores the
+        values in the 'daily_avg_engg_rate' column.
+        :param df: PySpark dataframe
+        :return: PySpark dataframe with 'daily_avg_engg_rate' column
+        """
+        try:
+            windowSpec = Window.partitionBy(
+                F.col('created_day')
+            ).orderBy(
+                F.col('created_at')
+            )  # Creates a window by partitioning the data by day and sorting the data by tweet created date
+
+            self.df = self.df.withColumn(
+                'daily_avg_engg_rate',
+                F.avg(
+                    F.col('engagement_rate')
+                ).over(windowSpec)
+            )  # Calculates the average engagement rate with respect to window
+
+            print("\nCreated daily_avg_engg_rate column.")
+
+        except Exception as args:
+            raise f"Error in function average_engagement_rate_daily. ERROR: \n{args}"
+
+    def get_dataframe(self):
+        return self.df
 
     def create_eng_period_chart(self):
         """Generates engagement plots.
@@ -26,8 +89,8 @@ class EngagementRateAnalysis:
         create_eng_period_chart function generates the engagement rate charts for both keywords.
         """
         try:
-            df1 = self.df1.orderBy(F.col('created_at')).toPandas()    # PySpark dataframe converted to pandas dataframe
-            df2 = self.df2.orderBy(F.col('created_at')).toPandas()    # PySpark dataframe converted to pandas dataframe
+            df1 = self.df1.orderBy(F.col('created_at')).toPandas()  # PySpark dataframe converted to pandas dataframe
+            df2 = self.df2.orderBy(F.col('created_at')).toPandas()  # PySpark dataframe converted to pandas dataframe
 
             title1 = f"Engagement rate of {self.keyword1}."
             image_name1 = f"engagement_rate_{self.keyword1}_plot.png"

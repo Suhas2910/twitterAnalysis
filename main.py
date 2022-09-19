@@ -14,7 +14,6 @@ lengths.
 NOTE: Make sure add user's credentials in the config/config.ini file before running the module.
 """
 
-
 import sys
 
 from analysis.analysis import EngagementRateAnalysis
@@ -34,6 +33,7 @@ def display_dataframe(df, n=10):
 class TwitterAnalysis:
     """Creating the dataframe for tweets.
     """
+
     def __init__(self):
         # get the SparkSession and twitterAPI objects
         self.spark = start_spark()
@@ -48,47 +48,33 @@ class TwitterAnalysis:
         :return: PySpark DataFrame
         """
         tweets_list = []
-        tweets = self.twitter_api.read_tweets(query)    # Read the tweets
+        tweets = self.twitter_api.read_tweets(query)  # Read the tweets
 
         try:
             for tweet in tweets:
-                if 'retweeted_status' in tweet._json:   # If the tweet text is truncated
-                    full_text = tweet._json['retweeted_status']['full_text']    # Get the full text
+                # Checks if tweets have 140+ characters
+                if 'extended_tweet' in tweet._json:
+                    full_text = tweet._json['extended_tweet']['full_text']  # Get the full text
                 else:
                     full_text = tweet.full_text
                 if KEYWORD1 in full_text.lower():
                     tweets_list.append((
-                        tweet.created_at,
-                        tweet.user.screen_name,
-                        tweet.user.followers_count,
-                        tweet.id,
-                        tweet.retweet_count,
-                        tweet.favorite_count,
-                        full_text,
-                        len(tweet._json['entities']['hashtags']),    # Number of hashtags used in tweet
-                        KEYWORD1
+                        tweet.created_at, tweet.user.screen_name, tweet.user.followers_count,
+                        tweet.id, tweet.retweet_count, tweet.favorite_count, full_text,
+                        len(tweet._json['entities']['hashtags']), KEYWORD1
                     ))
                 elif KEYWORD2 in full_text.lower():
                     tweets_list.append((
-                        tweet.created_at,
-                        tweet.user.screen_name,
-                        tweet.user.followers_count,
-                        tweet.id,
-                        tweet.retweet_count,
-                        tweet.favorite_count,
-                        full_text,
-                        len(tweet._json['entities']['hashtags']),
-                        KEYWORD2
+                        tweet.created_at, tweet.user.screen_name, tweet.user.followers_count,
+                        tweet.id, tweet.retweet_count, tweet.favorite_count,
+                        full_text, len(tweet._json['entities']['hashtags']), KEYWORD2
                     ))
                 else:
                     pass
-
             print(f"\nCompleted reading {len(tweets_list)} tweets.")
-            df = self.spark.createDataFrame(data=tweets_list, schema=get_schema())    # Create the dataframe
+            df = self.spark.createDataFrame(data=tweets_list, schema=get_schema())  # Create the dataframe
             df = pre_process_text(df)
-
             return df
-
         except Exception as args:
             raise f"Exception while create dataframe. ERROR:{args}"
 
@@ -96,15 +82,15 @@ class TwitterAnalysis:
 # Entry point to this module
 if __name__ == '__main__':
 
-    args = sys.argv    # Reading the arguments
+    args = sys.argv  # Reading the arguments
 
     # Checks for the number of arguments
     if len(args) != 3:
         print("Provide two keywords as parameters")
         sys.exit("Check the parameters")
 
-    KEYWORD1 = args[1].lower()    # First argument as Keyword1
-    KEYWORD2 = args[2].lower()    # Second argument as Keyword2
+    KEYWORD1 = args[1].lower()  # First argument as Keyword1
+    KEYWORD2 = args[2].lower()  # Second argument as Keyword2
 
     # The query shows that, the tweets needs to have either keyword1 or keyword2,
     # and it does not consider the retweets
@@ -152,5 +138,3 @@ if __name__ == '__main__':
     display_dataframe(tweets_df)
 
     print("SUCCESSFUL!!!")
-
-

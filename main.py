@@ -8,7 +8,7 @@ number of words, favorite count, and engagement rate of tweets. This module can 
 $ python main.py keyword1 keyword2
 
 where the keyword1 and keyword2 represents the first keyword and second keyword respectfully. These parameters can be
-provided by the user. This module outputs plots of sentiment score, engagement rate, engagment count and the words
+provided by the user. This module outputs plots of sentiment score, engagement rate, engagement count and the words
 lengths.
 
 NOTE: Make sure add user's credentials in the config/config.ini file before running the module.
